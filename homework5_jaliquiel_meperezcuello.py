@@ -42,12 +42,12 @@ class RNN:
 
             delta_u += np.dot(q, self.h[t]) # t = t -1, because our index starts at 49, not 50
             
-            print(f"the shape of q is {q.shape}")
-            print(f"the shape of x is {x[t-1].shape}")
-            print(f"current t is {t}")
+            # print(f"the shape of q is {q.shape}")
+            # print(f"the shape of x is {x[t-1].shape}")
+            # print(f"current t is {t}")
             # current proble is that x is an int and doing dot prduct is getting destroyed
             
-            print(f"the shape of q is {q.shape}")
+            # print(f"the shape of q is {q.shape}")
             delta_v += np.dot(q, x[t-1]) # todo: what index will this index for the last element?, i.e. if t= 0, will this try to index the last x?
             # delta_v += np.dot(q, x[t-1].T) # todo: what index will this index for the last element?, i.e. if t= 0, will this try to index the last x?
 
@@ -74,9 +74,9 @@ class RNN:
         for t in range(len(x)):
 
             a = np.dot(self.V, x[t])
-            print(f"my v shape is {self.V.shape}")
-            print(f"my a shape is {a.shape}")
-            print(f"my x shape is {x[t].shape}")
+            # print(f"my v shape is {self.V.shape}")
+            # print(f"my a shape is {a.shape}")
+            # print(f"my x shape is {x[t].shape}")
             z = np.dot(self.U, self.h[t]) + np.dot(self.V, x[t]) # 
             ht = np.tanh(z)
             self.h.append(ht)
