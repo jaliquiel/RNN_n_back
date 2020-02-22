@@ -46,7 +46,10 @@ class RNN:
             print(f"the shape of x is {x[t-1].shape}")
             print(f"current t is {t}")
             # current proble is that x is an int and doing dot prduct is getting destroyed
+            
+            print(f"the shape of q is {q.shape}")
             delta_v += np.dot(q, x[t-1]) # todo: what index will this index for the last element?, i.e. if t= 0, will this try to index the last x?
+            # delta_v += np.dot(q, x[t-1].T) # todo: what index will this index for the last element?, i.e. if t= 0, will this try to index the last x?
 
             # update g from t to t-1 for next loop
             g = 1 - self.h[t-1]**2 # index the t-1 elementh (extra -1 because how python indexing works -1 = last)
@@ -69,6 +72,11 @@ class RNN:
 
         # iterate 50 times, start at 1th index 
         for t in range(len(x)):
+
+            a = np.dot(self.V, x[t])
+            print(f"my v shape is {self.V.shape}")
+            print(f"my a shape is {a.shape}")
+            print(f"my x shape is {x[t].shape}")
             z = np.dot(self.U, self.h[t]) + np.dot(self.V, x[t]) # 
             ht = np.tanh(z)
             self.h.append(ht)
