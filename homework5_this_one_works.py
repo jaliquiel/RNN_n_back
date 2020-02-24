@@ -25,7 +25,7 @@ class RNN:
         self.numInput = numInput
         self.U = np.random.randn(numHidden, numHidden) * 1e-1
         self.V = np.random.randn(numHidden, numInput) * 1e-1
-        self.w = np.random.randn(numHidden) * 1e-1
+        self.w = np.random.randn(numHidden,1) * 1e-1
         self.hs = [np.zeros((numHidden, numInput))]
         # TODO: IMPLEMENT ME
 
@@ -34,41 +34,44 @@ class RNN:
         yhat = self.forward(x)
         T = len(y) # = 50
         # print(self.yhats.keys())
-        gradient_MSE = yhat[-1] - y[-1] # y = pos(50) - pos(49)
-
+        gradient_MSE = (yhat[-1] - y[-1]).reshape(-1,1) # (1,1)
         #init gradient values
-        # gradient_w = np.zeros(self.w.shape).reshape(-1,1)
-        # gradient_U = np.zeros(self.U.shape)
-        # gradient_V = np.zeros(self.V.shape)
+        gradient_w = np.zeros(self.w.shape).reshape(-1,1)
+        gradient_U = np.zeros(self.U.shape)
+        gradient_V = np.zeros(self.V.shape)
 
-        gradient_w = 0
-        gradient_U = 0
-        gradient_V = 0
+        # gradient_w = 0
+        # gradient_U = 0
+        # gradient_V = 0
 
 
-        gradient_h = np.dot(gradient_w, gradient_MSE).reshape(-1,1)
-        
+        # gradient_h = np.dot(gradient_w, gradient_MSE).reshape(-1,1) #(1,1)
+        g = 1 - self.hs[-1]**2
+        gradient_h = (np.dot(gradient_MSE, gradient_w.T) * g.T)
+
         for t in np.arange(T)[::-1]:
-            # gradient_MSE = (yhat[t] - y[t])
-            # print("temp stuff")
-            # print(gradient_h.shape)
-            # temp = (gradient_h * (1 - self.hs[t+1] ** 2))
-            # print(temp.shape)
 
-            # print(f"gradient_h before is {gradient_h.shape}")
-            temp = np.dot(gradient_h,np.diag(1 - self.hs[t+1] ** 2))
+
+            # temp = np.dot(gradient_h,np.diag(1 - self.hs[t+1] ** 2))
             # print(temp.shape)
 
             gradient_w += np.dot(gradient_MSE, self.hs[t+1].T).reshape(-1,1) # could be self.hs[t-1]
 
             # print("gradien U")
             # print(temp.shape)
-            gradient_U += temp.reshape(-1,1).dot(np.transpose(self.hs[t]))
-            # gradient_U += 
-            gradient_V += temp.reshape(-1,1).dot(np.transpose(self.last_x[t]))
+            gradient_U += gradient_h.T.dot(self.hs[t].T)
+            # print("last x")
+            # print(self.last_x[t])
+            # a = gradient_h.dot(self.last_x[t])
+            # print(a.shape)
+            gradient_V += gradient_h.T.dot(self.last_x[t])
 
+            # update variables
             gradient_MSE = np.array(yhat[t-1] - y[t-1])
-            gradient_h = self.U.dot(temp).reshape(-1,1) #+  np.dot(np.transpose(gradient_w), gradient_MSE)
+            g = 1 - self.hs[t-1]**2
+            
+            gradient_h = (np.dot(gradient_h,self.U)*g.T)
+            # gradient_h = self.U.dot(temp).reshape(-1,1) #+  np.dot(np.transpose(gradient_w), gradient_MSE)
             # print(f"gradient_h is {gradient_h.shape}")
         
         # try wth out clip and see if it works!!!! study a little more the aspects of the algo.
@@ -86,7 +89,8 @@ class RNN:
 
         for i in range(len(x)):
             h_t = np.tanh(self.V.dot(x[i]) + self.U.dot(self.hs[i]))
-            yhat_t = self.w.dot(h_t)
+            # yhat_t = self.w.dot(h_t)
+            yhat_t = np.dot(h_t.T,self.w)
             self.hs.append(h_t)
             yhats.append(yhat_t)
 
@@ -110,7 +114,7 @@ class RNN:
             # self.w -= rate1 * gradient_w.reshape(-1)
             self.V -= epsilon * gradient_V
             self.U -= epsilon * gradient_U
-            self.w -= epsilon * gradient_w.reshape(-1)
+            self.w -= epsilon * gradient_w
 
             yhat = self.forward(x)
             MSE_val = MSE(yhat, y)
@@ -119,6 +123,7 @@ class RNN:
 
 def MSE (yhat, y):
     return 0.5 * np.sum((yhat - y)**2)
+    # return np.sum(0.5*np.square(y_hat - y))
 
 # From https://medium.com/@erikhallstrm/hello-world-rnn-83cd7105b767
 def generateData ():
@@ -141,7 +146,7 @@ if __name__ == "__main__":
     rnn = RNN(numHidden, numInput, 1)
 
     batch_size = 1
-    epsilon = 0.1
+    epsilon = 0.01
     epochs = 1000000
 
     # a= check_grad(forward,backward,y)
